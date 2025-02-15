@@ -8,6 +8,7 @@ import {
 	Interaction,
 } from 'discord.js';
 import { FetchAccount, GrantUserBadge, UserSettings } from '../api/elite.js';
+import { escapeIgn } from '../classes/Util.js';
 import { CommandAccess, CommandType, EliteCommand } from '../classes/commands/index.js';
 import { EliteEmbed, ErrorEmbed } from '../classes/embeds.js';
 
@@ -113,7 +114,7 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 			const newEmbed = EliteEmbed()
 				.setTitle('Claim Elite Farmer Badge')
 				.setDescription(
-					`Your primary Minecraft account is ${account.name} (\`${account.id}\`)\nIf this is incorrect please change it in your [profile settings](https://elitebot.dev/profile) and try again.`,
+					`Your primary Minecraft account is ${escapeIgn(account.name)} (\`${account.id}\`)\nIf this is incorrect please change it in your [profile settings](https://elitebot.dev/profile) and try again.`,
 				);
 
 			const row = new ActionRowBuilder<ButtonBuilder>().addComponents(

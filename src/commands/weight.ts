@@ -10,7 +10,7 @@ import {
 import { getCropFromName, getLevel } from 'farming-weight';
 import { FetchLeaderboardRankings, FetchProfile, UserSettings } from '../api/elite.js';
 import { elitePlayerOption } from '../autocomplete/player.js';
-import { GetCropEmoji, LEVELING_XP } from '../classes/Util.js';
+import { GetCropEmoji, LEVELING_XP, escapeIgn } from '../classes/Util.js';
 import { CommandAccess, CommandType, EliteCommand, SlashCommandOptionType } from '../classes/commands/index.js';
 import { EliteEmbed, EmptyField, EmptyString, ErrorEmbed, WarningEmbed } from '../classes/embeds.js';
 import { getAccount } from '../classes/validate.js';
@@ -54,7 +54,7 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 
 	if (!member || !profileWeight) {
 		const embed = ErrorEmbed("Couldn't fetch data!")
-			.setDescription(`Something went wrong when getting data for "${playerName}".`)
+			.setDescription(`Something went wrong when getting data for "${escapeIgn(playerName)}".`)
 			.setFooter({ text: 'Contact kaeso.dev if this continues to happen' });
 		await interaction.deleteReply().catch(() => undefined);
 		interaction.followUp({ embeds: [embed], ephemeral: true });
@@ -64,7 +64,7 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 	const totalWeight = profileWeight?.totalWeight ?? 0;
 
 	if (totalWeight === 0) {
-		const embed = WarningEmbed(`Stats for ${playerName.replace(/_/g, '\\_')}`)
+		const embed = WarningEmbed(`Stats for ${escapeIgn(playerName)}`)
 			.addFields({
 				name: 'Farming Weight',
 				value:
@@ -200,7 +200,7 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 		}
 
 		if (!isEmbed) {
-			embed.setTitle(`Stats for ${playerName?.replace(/_/g, '\\_')} on ${profile?.profileName}`);
+			embed.setTitle(`Stats for ${escapeIgn(playerName)} on ${profile?.profileName}`);
 		} else if (custom.data.color) {
 			embed.setColor(custom.data.color);
 		}
@@ -237,12 +237,14 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 			rank: value ?? -1,
 		}));
 
+		const cropWeight = +crops.reduce((acc, [, value]) => acc + (value ?? 0), 0).toFixed(2);
+
 		const formattedCrops = crops.map(([key, value]) => {
 			const crop = getCropFromName(key);
 			if (!crop) return '';
 
 			const collection = member?.collections?.[crop];
-			const percent = Math.round(((value ?? 0) / totalWeight) * 1000) / 10;
+			const percent = Math.round(((value ?? 0) / cropWeight) * 1000) / 10;
 
 			const { rank = -1, key: lb } = cropRanks.find((c) => c.crop === crop) ?? {};
 			const rankString =
@@ -253,8 +255,6 @@ async function execute(interaction: ChatInputCommandInteraction, settings?: User
 				`${collection ? `\n-# ${rankString}${collection.toLocaleString()} ${key}` : ''}`
 			);
 		});
-
-		const cropWeight = +crops.reduce((acc, [, value]) => acc + (value ?? 0), 0).toFixed(2);
 
 		embed.addFields(
 			{

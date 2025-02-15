@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction } from 'discord.js';
 import { FetchAccount, FetchUpdateAccount, LinkAccount } from '../api/elite.js';
 import { autocomplete } from '../autocomplete/player.js';
+import { escapeIgn } from '../classes/Util.js';
 import { CommandAccess, CommandType, EliteCommand, SlashCommandOptionType } from '../classes/commands/index.js';
 import { EliteEmbed, ErrorEmbed, WarningEmbed } from '../classes/embeds.js';
 
@@ -56,11 +57,9 @@ async function execute(interaction: ChatInputCommandInteraction) {
 	}
 
 	try {
-		const { response } = await LinkAccount(interaction.user.id, playerName);
+		const { error, response } = await LinkAccount(interaction.user.id, playerName);
 
 		if (!response.ok) {
-			const error = await response.text().catch(() => undefined);
-
 			const embed = ErrorEmbed('Failed to Link Account!')
 				.setDescription(
 					(error || 'Please try again later.') +
@@ -80,7 +79,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 		const embed = EliteEmbed()
 			.setTitle('Account Linked!')
 			.setDescription(
-				`Your account has been linked to ${playerName}! You can now use the \`/weight\` command without entering your username!`,
+				`Your account has been linked to ${escapeIgn(playerName)}! You can now use the \`/weight\` command without entering your username!`,
 			)
 			.addFields({
 				name: 'Want to unlink your account?',
